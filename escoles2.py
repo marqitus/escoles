@@ -8,6 +8,9 @@ import plotly.graph_objects as go
 
 # Define the fetch_data function with st.cache_data for caching
 @st.cache_data
+
+
+
 def fetch_data(url, limit=1000):
     offset = 0
     all_data = pd.DataFrame()
@@ -38,8 +41,15 @@ def fetch_data(url, limit=1000):
 
 
 def main():
-    st.title("Catalunya School Registrations")
+   
     
+    st.set_page_config(
+    page_title="Escoles",
+    page_icon="🧊"
+    )
+    
+    st.title("Preinscripcions")
+     
     url = "https://analisi.transparenciacatalunya.cat/resource/99md-r3rq.csv"
     df = fetch_data(url)
     
@@ -200,6 +210,7 @@ def main():
 
                 # Update the layout for the figure
                 fig.update_layout(
+                    autosize=True,
                     barmode='overlay',  # Allows the gray range bars to act as background
                     xaxis=dict(type='category', title="Year (Curs)"),
                     yaxis=dict(title="Count"),
@@ -208,7 +219,7 @@ def main():
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
                 )
 
-                st.plotly_chart(fig)
+                st.plotly_chart(fig,use_container_width=True)
                 
                 
             
@@ -263,7 +274,7 @@ def main():
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
                 )
 
-                st.plotly_chart(fig)
+                st.plotly_chart(fig,use_container_width=True)
 
 
             
