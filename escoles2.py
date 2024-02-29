@@ -5,6 +5,7 @@ from io import StringIO
 import pydeck as pdk
 import plotly.express as px
 import plotly.graph_objects as go
+from streamlit_extras.buy_me_a_coffee import button 
 
 # Define the fetch_data function with st.cache_data for caching
 @st.cache_data
@@ -48,7 +49,23 @@ def main():
     page_icon="🧊"
     )
     
-    st.title("Preinscripcions")
+    st.markdown('''
+        <style>
+        .stApp [data-testid="stToolbar"]{
+            display:none;
+        }
+        </style>
+        ''', unsafe_allow_html=True)
+        
+    st.markdown("""
+        # Benvingut a Escola Finder 2024/2025 🏫
+
+        Aquesta aplicació t'ajudarà a decidir amb dades la teva llista de preferències per escollir escola. Utilitzem dades obertes proporcionades per: 🔗 [Portal de Transparència de Catalunya](https://analisi.transparenciacatalunya.cat/)
+
+        Amb aquesta eina, podràs explorar informació sobre l'històric de les preinscripcions en les escoles.""", unsafe_allow_html=True)
+
+    
+    button(username="marqitus", floating=True, width=221)
      
     url = "https://analisi.transparenciacatalunya.cat/resource/99md-r3rq.csv"
     df = fetch_data(url)
@@ -86,7 +103,7 @@ def main():
         
         # Use the new combined column for the school search selector
         school_options = df['school_with_municipality'].unique()
-        selected_school_with_municipality = st.selectbox('Select a school:', options=school_options)
+        selected_school_with_municipality = st.selectbox('Filtra una escola:', options=school_options)
 
         # Split the selection to get the school name and municipality
         selected_school, selected_municipality = selected_school_with_municipality.rsplit(' (', 1)
@@ -104,7 +121,7 @@ def main():
             # More code for displaying school information...
 
             # Now let's handle the map
-            st.subheader("School Location")
+            st.subheader("Situació de les escoles del municipi:")
 
             # Get the DataFrame for nearby schools by excluding the selected school
             nearby_schools_df = df[df['nom_municipi'] == selected_municipality]
@@ -165,7 +182,7 @@ def main():
                 tooltip=tooltip
             ))
                 
-            st.subheader("Evolucio")
+            st.subheader("Evolució en les preinscripcions:")
 
             for ense in filtered_df['nom_ensenyament'].unique():
                 # Filter by education type and find the minimum 'nivell' for this education type
@@ -186,7 +203,9 @@ def main():
                         x=curs_df ['curs'],  # 'curs' as X-axis
                         y=curs_df['oferta_inicial_places'],  # Sum or average if multiple rows
                         name='Initial Seat Offerings',
-                        marker_color='lightgray'
+                        marker_color='lightgray',
+                        hovertemplate='<b>Year:</b> %{x}<br><b>Oferta de places:</b> %{y}<extra></extra>'  # Custom hover label
+
                     ))
 
                     fig.add_trace(go.Bar(
@@ -195,7 +214,8 @@ def main():
                         base=0,
                         name='1st Choice Assignments',
                         marker_color='blue',
-                        width=0.2
+                        width=0.2,
+                        hovertemplate='<b>Year:</b> %{x}<br><b>1a opció:</b> %{y}<extra></extra>'  # Custom hover label
                         
                     ))
 
@@ -205,28 +225,34 @@ def main():
                         base=curs_df['assignacions_1a_peticio'],
                         name='Other Assignments',
                         marker_color='rgba(135, 206, 250, 0.6)',
-                        width=0.2
+                        width=0.2,
+                        hovertemplate='<b>Year:</b> %{x}<br><b>Altres peticions:</b> %{y}<extra></extra>'  # Custom hover label
                     ))
 
                 # Update the layout for the figure
                 fig.update_layout(
                     autosize=True,
-                    barmode='overlay',  # Allows the gray range bars to act as background
-                    xaxis=dict(type='category', title="Year (Curs)"),
-                    yaxis=dict(title="Count"),
-                    title_text=f"Performance Overview: {ense} ",
+                    barmode='overlay',
+                    xaxis=dict(type='category', title="Curs"),
+                    yaxis=dict(title=""),
+                    title_text=f"{ense} ",
+                    # Disable zoom and other interactive capabilities
+                    dragmode=False,
                     showlegend=False,
-                    legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
                 )
 
-                st.plotly_chart(fig,use_container_width=True)
+                # Display the figure with disabled Plotly menu and static plot configuration
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
                 
                 
             
-            st.subheader("Education Types Overview")
+            st.subheader("Inscripcions pels cursos o nivells:")
+            
+            st.markdown("""En aquesta visualització es poden veure les inscripcions de l'escola en tots els cursos, no només en els primers cursos de cada etapa educativa.""", unsafe_allow_html=True)
+            
             # Selector for unique "Curs" values
             unique_curs = filtered_df['curs'].unique()
-            selected_curs = st.selectbox('Select a "curs":', options=unique_curs)
+            selected_curs = st.selectbox('Selecciona un curs escolar:', options=unique_curs)
             
             for ense in filtered_df['nom_ensenyament'].unique():
                 ense_df = filtered_df[filtered_df['nom_ensenyament'] == ense]
@@ -241,7 +267,8 @@ def main():
                     y=ense_df['oferta_inicial_places'],
                     name='Initial Seat Offerings',
                     marker_color='lightgray',
-                    width=0.4  # Adjust the width as necessary
+                    width=0.4,
+                    hovertemplate='<b>Year:</b> %{x}<br><b>Oferta de places:</b> %{y}<extra></extra>'
                 ))
 
                 # Add bars for assignments, ensuring they start from 0
@@ -251,7 +278,8 @@ def main():
                     base=0,
                     name='1st Choice Assignments',
                     marker_color='blue',
-                    width=0.2
+                    width=0.2,
+                    hovertemplate='<b>Year:</b> %{x}<br><b>1a opció:</b> %{y}<extra></extra>'
                 ))
 
                 fig.add_trace(go.Bar(
@@ -260,28 +288,33 @@ def main():
                     base=ense_df['assignacions_1a_peticio'],
                     name='Other Assignments',
                     marker_color='rgba(135, 206, 250, 0.6)',
-                    width=0.2
+                    width=0.2,
+                    hovertemplate='<b>Year:</b> %{x}<br><b>Altres peticions:</b> %{y}<extra></extra>'
                 ))
                 
 
                 # Update the layout for the figure
                 fig.update_layout(
+                    autosize=True,
                     barmode='overlay',  # Allows the gray range bars to act as background
-                    xaxis=dict(type='category', title="Level (Nivell)", tickmode='array', tickvals=ense_df['nivell'].unique()),
-                    yaxis=dict(title="Count"),
-                    title_text=f"Education Type: {ense}",
+                    xaxis=dict(type='category', title="Nivell", tickmode='array', tickvals=ense_df['nivell'].unique()),
+                    yaxis=dict(title=""),
+                    title_text=f"{ense}",
                     showlegend=False,
                     legend=dict(orientation="h", yanchor="bottom", y=1.02, xanchor="right", x=1)
                 )
 
-                st.plotly_chart(fig,use_container_width=True)
 
+                # Display the figure with disabled Plotly menu and static plot configuration
+                st.plotly_chart(fig, use_container_width=True, config={"displayModeBar": False})
 
-            
-            st.dataframe(min_nivell_df)
-            st.dataframe(escoles)
-            st.dataframe(escoles_raw)   
-            st.dataframe(nearby_schools_df)
+            st.subheader("Escoles del municipi:")
+            st.markdown("""En aquesta taula podreu veure les escoles del municipi a la seleccionada.""", unsafe_allow_html=True)
+            nivell_options = sorted(nearby_schools_df['nivell'].unique())
+            selected_nivell = st.selectbox('Selecciona un curs:', options=nivell_options, index=0)  # 'index=0' starts the selection at the first option
+            nearby_schools_df = nearby_schools_df[nearby_schools_df['nivell'] == selected_nivell]
+            st.dataframe(nearby_schools_df[['denominaci_completa', 'nom_naturalesa', 'nom_ensenyament','nivell','oferta_inicial_grups','oferta_inicial_places','assignacions']])
+
             
             
     else:
