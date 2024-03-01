@@ -106,7 +106,7 @@ def setup_page():
         """, unsafe_allow_html=True)
 
     # Example of a custom button call; ensure this function is defined or imported in your script
-    button(username="marqitus", floating=True, width=221)
+    button(username="marqitus", floating=False, width=221)
 
 def get_nearby_schools_df(df, selected_municipality, selected_school):
     nearby_schools_df = df[df['nom_municipi'] == selected_municipality]
