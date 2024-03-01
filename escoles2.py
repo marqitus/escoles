@@ -433,7 +433,7 @@ def main():
             unique_curs = filtered_multi_df['curs'].unique()
 
             # Selector for "nivell" (level)
-            unique_nivell = filtered_multi_df['nivell'].unique()
+            unique_nivell = sorted(filtered_multi_df['nivell'].unique())
             
             col1, col2 = st.columns(2)
 
